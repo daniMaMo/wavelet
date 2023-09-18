@@ -3,7 +3,7 @@ import pywt
 import numpy as np
 
 
-class function:
+class Function:
 
     """
         This class represents a function.
@@ -45,7 +45,7 @@ class function:
 
         """
         rango = factor*self.y
-        return function(self.x, rango)
+        return Function(self.x, rango)
 
     def plot(self, name):
         """
@@ -75,7 +75,7 @@ class function:
         aux2 = np.concatenate([np.zeros(step), self.y, np.zeros(n)])
         aux3 = aux2[: 2*n]
         rango = aux3[::2]
-        return function(self.x, rango)
+        return Function(self.x, rango)
 
     def atom_transform(self, j, k):
         """
@@ -90,7 +90,7 @@ class function:
         """
         translate = self.x + k
         dominio = (2**j)*translate
-        return function(dominio, self.y)
+        return Function(dominio, self.y)
 
     def convolution(self, other_function):
         """
@@ -118,18 +118,28 @@ class function:
 
         """
         rango = self.y + other_function.y
-        return function(self.x, rango)
+        return Function(self.x, rango)
 
 
 def package(wavelet, n):
+    """
+    Computes the n-th package of the given wavelet.
+    Args:
+        wavelet: It's a wavelet include in the PyWavelets package, the wavelet most used are:
+                db, sym, coif, haar, bior, rbio, dmey, cdf and shan.
+        n: Frequency parameter.
+
+    Returns: the n-th package function.
+
+    """
     phi, psi, x = pywt.Wavelet(wavelet).wavefun(level=7)
     h = np.sqrt(2) * np.array(pywt.Wavelet(wavelet).dec_lo)[::-1]
     g = np.sqrt(2) * np.array(pywt.Wavelet(wavelet).dec_hi)[::-1]
     l = len(h)
     if n == 0:
-        return function(x, phi)
+        return Function(x, phi)
     if n == 1:
-        return function(x, psi)
+        return Function(x, psi)
     if (n % 2) == 0 and (n != 0):
         w = package(wavelet, n/2).transform(0).vcomp(h[0])
         for k in range(1, l):
@@ -143,6 +153,18 @@ def package(wavelet, n):
 
 
 def w_jnk(wavelet, j, n, k):
+    """
+    Computes the atoms of wavelet packets of the given wavelet.
+
+    Args:
+        wavelet: It's a wavelet include in the PyWavelets package.
+        j: scale parameter.
+        n: frequency parameter.
+        k: position parameter.
+
+    Returns: the atoms w_jnk.
+
+    """
     return package(wavelet, n).atom_transform(j, k).vcomp(2**(-j/2))
 
 # print(w_jnk('haar', 1,0,2).y)
