@@ -2,6 +2,19 @@ from paquete import w_jnk
 import numpy as np
 
 def dict(wavelet,j, n_row):
+    """
+    Calculates the dictionary matrix, which contains in each column
+    the coefficients of the wavelet dictionary atoms.
+
+    Args:
+        wavelet: type of wavelet
+        j: scale parameter
+        n_row: number of coefficients of each atom
+
+    Returns:
+        dictionary matrix
+    """
+
     m = (2**j -1)*(n_row)
     matriz = np.zeros((n_row, m))
     for k in range(n_row):

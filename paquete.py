@@ -1,15 +1,46 @@
 import pylab
 import pywt
 import numpy as np
-#import torch.nn as nn
 
 class function:
-    # Constructor: se llama cuando se crea una nueva instancia de la clase
+    """
+        This class represents a function.
+
+        This class has the following attributes:
+        - x (list): The domain.
+        - y (list): The range.
+
+        Available methods:
+        - vcomp(self, factor): Makes a vertical compression.
+        - plot(self, nombre): Draws the function.
+        - transform(self, k): Makes two transformations: the first is a k horizontal translation (to the right) and
+                              the second is a horizontal compression by a factor of 2.
+        - atom_transform(self, j, k): Makes two transformations: the first is a k horizontal translation (to the right)
+                                    and the second is a horizontal dilation by a factor of 2**j.
+        - convolution(self, other_function): Computes the convolution between two functions.
+        - __add__(self, other_function): Computes the sum between two functions.
+        - __sub__(self, other_function): Computes the subtraction between two functions.
+        """
     def __init__(self, x, y):
+        """
+         This class represents a function
+
+        Args:
+            x: The domain.
+            y: The range.
+        """
         self.x = x
         self.y = y
 
     def vcomp(self, factor):
+        """
+        Makes a vertical compression.
+        Args:
+            factor:
+
+        Returns:
+
+        """
         rango = factor*self.y
         return function(self.x, rango)
 
