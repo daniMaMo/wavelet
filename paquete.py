@@ -2,7 +2,9 @@ import pylab
 import pywt
 import numpy as np
 
+
 class function:
+
     """
         This class represents a function.
 
@@ -19,11 +21,12 @@ class function:
                                     and the second is a horizontal dilation by a factor of 2**j.
         - convolution(self, other_function): Computes the convolution between two functions.
         - __add__(self, other_function): Computes the sum between two functions.
-        - __sub__(self, other_function): Computes the subtraction between two functions.
         """
+
     def __init__(self, x, y):
+
         """
-         This class represents a function
+         This class represents a function.
 
         Args:
             x: The domain.
@@ -36,20 +39,37 @@ class function:
         """
         Makes a vertical compression.
         Args:
-            factor:
+            factor: factor of compression.
 
-        Returns:
+        Returns: compressed function.
 
         """
         rango = factor*self.y
         return function(self.x, rango)
 
-    def plot(self, nombre):
+    def plot(self, name):
+        """
+        Draws the function.
+        Args:
+            name: name of the function.
+
+        Returns: plot of the function with its name.
+
+        """
         pylab.plot(self.x, self.y)
-        pylab.title(nombre)
+        pylab.title(name)
         return pylab.show()
 
     def transform(self, k):
+        """
+        Makes two transformations: the first is a k horizontal translation (to the right) and
+        the second is a horizontal compression by a factor of 2.
+
+        Args:
+            k: factor of translation.
+
+        Returns: the transformed function instance.
+        """
         n = len(self.y)
         step = k * int(n / max(self.x))
         aux2 = np.concatenate([np.zeros(step), self.y, np.zeros(n)])
@@ -58,25 +78,48 @@ class function:
         return function(self.x, rango)
 
     def atom_transform(self, j, k):
+        """
+        Makes two transformations: the first is a k horizontal translation (to the right)
+                                    and the second is a horizontal dilation by a factor of 2**j.
+        Args:
+            j: scale parameter.
+            k: position parameter.
+
+        Returns: the atom_transformed function instance.
+
+        """
         translate = self.x + k
-        dominio = (2**j)*(translate)
+        dominio = (2**j)*translate
         return function(dominio, self.y)
 
     def convolution(self, other_function):
-        if abs(np.sum(np.convolve(self.y, other_function.y, mode='full')))< 1e-5:
+        """
+        Computes the convolution between two functions.
+        Args:
+            other_function: A instance of function.
+
+        Returns: The value of the convolution.
+
+        """
+        if abs(np.sum(np.convolve(self.y, other_function.y, mode='full'))) < 1e-5:
             convolution = 0
         else:
             convolution = np.sum(np.convolve(self.y, other_function.y, mode='full'))
         return convolution
 
     def __add__(self, other_function):
+        """
+        Computes the sum between two functions.
+
+        Args:
+            other_function: A instance of function with same domain of given function.
+
+        Returns: the sum instance.
+
+        """
         rango = self.y + other_function.y
         return function(self.x, rango)
 
-    def __sub__(self, other_function):
-        dominio = np.concatenate((self.x[:-1], other_function.x[1:]))
-        rango = np.concatenate((self.y[:-1], (-1)*other_function.y[1:]))
-        return function(dominio, rango)
 
 def package(wavelet, n):
     phi, psi, x = pywt.Wavelet(wavelet).wavefun(level=7)
@@ -98,18 +141,19 @@ def package(wavelet, n):
             w = w + package(wavelet, (n-1)/2).transform(k).vcomp(g[k])
         return w
 
-def w_jnk(wavelet, j,n,k):
+
+def w_jnk(wavelet, j, n, k):
     return package(wavelet, n).atom_transform(j, k).vcomp(2**(-j/2))
 
-#print(w_jnk('haar', 1,0,2).y)
+# print(w_jnk('haar', 1,0,2).y)
 
-#n = 3
-#nombre = n
-#for k in range(8):
+# n = 3
+# nombre = n
+# for k in range(8):
 #    print(package('db4',k).plot(k))
 
-#for k in range(11):
+# for k in range(11):
 #    print(package('db2',0).convolution(package('db2',k)))
 
-#print(w_jnk('haar', 1,0,2).plot('ejemplos'))
-#print(len(w_jnk('haar', 1,1,1).y))
+# print(w_jnk('haar', 1,0,2).plot('ejemplos'))
+# print(len(w_jnk('haar', 1,1,1).y))
