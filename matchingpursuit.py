@@ -99,10 +99,14 @@ def mp(dicc_y, dicc_x, y_signal, x_continuo, iteration):
     Residue, the approximation after all iterations.
 
     """
-    assert iteration <= 19520  ## if j=6, k=64, n=64 then iteration <= 24576
+    assert iteration <= 25792  ## To j = 5, n=64
     r = y_signal
     approx = np.zeros(64513)
     key = 0
+    coefficients = np.zeros(25792)
+    numbers_k = np.array([65, 68, 74, 86, 110])   # numbers of translations given the scale j
+    index_star_k = np.array([2, 5, 11, 23, 47])   # The translation initial given the scale j
+    trans_coefficients = np.array([0, 4160, 8512, 13248, 18752])  # Number of positions that must be moved to properly place it in the array coefficients.
     for _ in range(iteration):
         p = {}
         for a in range(320):
@@ -116,40 +120,40 @@ def mp(dicc_y, dicc_x, y_signal, x_continuo, iteration):
 
         index_c_max = max(p, key=lambda k: p[k]['product'])
         c = p[index_c_max]['product']
-        print('c', c)
+        # print('c', c)
 
-        ### Calculating the remainder
+        ### Calculating the residue
         list_max = p[index_c_max]['list']  # list: j, a , k
-        print(list_max)
-        # atomo_selec = list_max[1]
-        # plt.plot(dicc_x[:,atomo_selec], dicc_y[:,atomo_selec], label = 'atomo selec')
-        # plt.legend()
-        # plt.show()
+        # print(list_max)
         k_max = list_max[2]
         j_max = list_max[0]
         a = list_max[1]
 
         a_max = interpolation(dicc_y, dicc_x, j_max, a, k_max)
 
-        # Plot signal
-        plt.plot(x_continuo, r, label=f'signal{_}')
-        plt.legend()
+        ### Update of coefficients
+        coefficients[(a%64)*(numbers_k[j_max]) + k_max + index_star_k[j_max] + trans_coefficients[j_max]] = c
 
-        # print('r', r == y_signal)
-        # print(a_max)
+        ### Plot signal
+        # plt.plot(x_continuo, r, label=f'signal{_}')
+        # plt.legend()
+
+        ### RESIDUE
         r = r - c * a_max
 
-        plt.plot(x_continuo, c * a_max, label='atom_max')
-        plt.legend()
+        # plt.plot(x_continuo, c * a_max, label='atom_max')
+        # plt.legend()
+        #
+        # plt.plot(x_continuo, r, label='residuo')
+        # plt.legend()
+        # plt.show()
 
-        plt.plot(x_continuo, r, label='residuo')
-        plt.legend()
-        plt.show()
+        ## APPROXIMATION
         approx = approx + (c * a_max)
-        plt.plot(x_continuo, y_signal, label='Signal')
-        plt.legend()
-        plt.plot(x_continuo, approx, label=f'Approx{_}')
-        plt.legend()
-        plt.show()
+        # plt.plot(x_continuo, y_signal, label='Signal')
+        # plt.legend()
+        # plt.plot(x_continuo, approx, label=f'Approx{_}')
+        # plt.legend()
+        # plt.show()
 
-    return r, approx
+    return r, approx, coefficients

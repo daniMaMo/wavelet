@@ -7,7 +7,7 @@ def cenandstand(array):
     This function centers and standardizes the data entered.
 
     Args:
-        array: the data entered
+        array: the data entered.
 
     Returns:
         An array of data centered and standardized.
@@ -42,7 +42,7 @@ def redSVD(array, dim):
         The new array of shape: (same row number of "array", "dim" )
 
     Examples:
-        redSVD(np.array([[1, 2, 3],[4, 5, 6], [7, 8, 9]], 2)
+        redSVD(np.array([[1, 2, 3],[4, 5, 6], [7, 8, 9]]), 2)
         [[1, 2], [4, 5], [7, 8]]
     """
 
