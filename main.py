@@ -8,13 +8,16 @@ import dictionary
 import pandas as pd
 from loaddata.time_series import *
 import datetime
-import matchingpursuit
 import matplotlib.pyplot as plt
 import SVD
 import time
 from matchingpursuit import *
 from SVD import *
 import random
+import sys
+import psutil
+import concurrent.futures
+import multiprocessing
 
 def gen_dict(wavelet, resolution):
     file_path = f'/home/daniela/PycharmProjects/tesis/{wavelet}'
@@ -73,6 +76,30 @@ def labeler(complete_series, resolution):
     else:
         label = 0
     return subarray[:-1], label
+
+def save_in_pickle(identifier, data_to_save, labels):
+    file_pickle = f'data_{identifier}.pkl'
+    labels_pickle = f'labels_{identifier}.pkl'
+    with open(file_pickle, 'wb') as file:
+        pickle.dump(data_to_save, file)
+    with open(labels_pickle, 'wb') as file:
+        pickle.dump(labels, file)
+    return f"Data saved in {file_pickle}"
+
+def get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_continuo, number_of_examples):
+    array_list = []  # list of the coefficient arrays obtained after running mp
+    labels = []
+    counter = 0
+    for l in range(number_of_examples):
+        subarray, label = labeler(complete_series, 64)
+        labels.append(label)
+        subarray_continuo = np.interp(x_continuo, x_discreto, subarray)
+        r, ap, subarray_coefficients = mp(dicc_y, dicc_x, subarray_continuo, x_continuo, 100)
+        counter += 1
+        print(counter)
+        array_list.append(subarray_coefficients)
+    save_in_pickle(identifier, array_list, labels)
+    return print(f"Finished of running the examples with the identifier {identifier}")
 
 def main(wavelet, resolution):
     dicc_y = gen_dict(wavelet, resolution)
@@ -138,24 +165,52 @@ def main(wavelet, resolution):
     # print('indices diferentes de cero', np.nonzero(coefficients))
 
     ### Calculating and storing the array required for executing the SVD
-    array_list = []   # list of the coefficient arrays obtained after running mp
-    labels = []
-    contador = 0
-    for l in range(1):
-        subarray, label = labeler(complete_series, 64)
-        labels.append(label)
-        subarray_continuo = np.interp(x_continuo, x_discreto, subarray)
-        r, ap, subarray_coefficients = mp(dicc_y, dicc_x, subarray_continuo, x_continuo, 100)
-        contador += 1
-        print(contador)
-        array_list.append(subarray_coefficients)
+    # array_list = []   # list of the coefficient arrays obtained after running mp
+    # labels = []
+    # counter = 0
+    # pid = psutil.Process().pid
+    identifier = int(sys.argv[1])
+    get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_continuo, 1)
+    # os.sched_setaffinity(0, [identifier])
+    # psutil.Process(pid).cpu_affinity([identifier])
+    # identifier = int(sys.argv[1])
+    # affinity.set_process_affinity([identifier])
 
-    pkl_file = 'matrix_of_arrays.pkl'
-    with open(pkl_file, 'wb') as file:
-        pickle.dump(array_list, file)
+    # array_list = []  # list of the coefficient arrays obtained after running mp
+    # labels = []
+    # counter = 0
+    # for l in range(1):
+    #     subarray, label = labeler(complete_series, 64)
+    #     labels.append(label)
+    #     subarray_continuo = np.interp(x_continuo, x_discreto, subarray)
+    #     r, ap, subarray_coefficients = mp(dicc_y, dicc_x, subarray_continuo, x_continuo, 100)
+    #     counter += 1
+    #     print(counter)
+    #     array_list.append(subarray_coefficients)
+    # save_in_pickle(identifier, array_list, labels)
+    # number_of_threads = int(sys.argv[1])
+    # identifier = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    # results = executor.map(my_function, range(2))
+    # num_processes = 3
+    # processes = []
+    # for i in range(num_processes):
+    #     my_function = get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_continuo, 1)
+    #     process = multiprocessing.Process(target=my_function, args=(i + 1,))
+    #     processes.append(process)
+    #     process.start()
+    #
+    # for process in processes:
+    #     process.join()
+    #
+    # print("All processes finished.")
 
-    array_to_svd = np.column_stack(array_list)
-    print('dimensiones del arreglo', array_to_svd.shape)
+    # pkl_file = 'matrix_of_arrays.pkl'
+    # with open(pkl_file, 'wb') as file:
+    #     pickle.dump(array_list, file)
+
+    # array_to_svd = np.column_stack(array_list)
+    # print('dimensiones del arreglo', array_to_svd.shape)
 
     # ### MATCHING PURSUIT
     # r200, ap200, coefficients200 = mp(dicc_y, dicc_x, datos_adj_continuo, x_continuo, 200)
