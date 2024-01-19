@@ -109,6 +109,7 @@ def mp(dicc_y, dicc_x, y_signal, x_continuo, iteration):
     trans_coefficients = np.array([0, 4160, 8512, 13248, 18752])  # Number of positions that must be moved to properly place it in the array coefficients.
     for _ in range(iteration):
         p = {}
+        print(_)
         for a in range(320):
             j = a // 64
 

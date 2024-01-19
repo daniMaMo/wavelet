@@ -132,6 +132,10 @@ def main(wavelet, resolution):
     plt.legend()
     plt.show()
 
+    ####################################################################################################
+    identifier = sys.argv[1]
+    get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_continuo, 1)
+
     # ## SIGNAL PLOTS
     # plt.scatter(np.arange(64), data_adj_close, label='discrete')
     # plt.legend()
@@ -169,16 +173,19 @@ def main(wavelet, resolution):
     # labels = []
     # counter = 0
     # pid = psutil.Process().pid
-    identifier = int(sys.argv[1])
-    get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_continuo, 1)
+    # identifier = sys.argv[1]
+    # identifier = 0
+    # get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_continuo, 1)
     # os.sched_setaffinity(0, [identifier])
     # psutil.Process(pid).cpu_affinity([identifier])
     # identifier = int(sys.argv[1])
     # affinity.set_process_affinity([identifier])
 
+    #############IDENTIFIERS
     # array_list = []  # list of the coefficient arrays obtained after running mp
     # labels = []
     # counter = 0
+    # identifier = 0
     # for l in range(1):
     #     subarray, label = labeler(complete_series, 64)
     #     labels.append(label)
@@ -188,6 +195,7 @@ def main(wavelet, resolution):
     #     print(counter)
     #     array_list.append(subarray_coefficients)
     # save_in_pickle(identifier, array_list, labels)
+
     # number_of_threads = int(sys.argv[1])
     # identifier = 0
     # with concurrent.futures.ThreadPoolExecutor() as executor:
