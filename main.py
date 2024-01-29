@@ -15,7 +15,6 @@ from matchingpursuit import *
 from SVD import *
 import random
 import sys
-import psutil
 import concurrent.futures
 import multiprocessing
 
@@ -53,7 +52,7 @@ def gen_dict_x(wavelet, resolution):
             pickle.dump(numpy_dictionary, file)
             return numpy_dictionary
 
-def labeler(complete_series, resolution):
+def labeler(complete_series, resolution, days_after):
     """
     Returns a subarray from complete_series of length resolution along with a label.
 
@@ -68,30 +67,31 @@ def labeler(complete_series, resolution):
                       and it will be 0 otherwise.
 
     """
-    lenght_subarray = resolution+1
+    lenght_subarray = resolution + days_after
     start_index = random.randint(0, len(complete_series) - lenght_subarray)
     subarray = complete_series[start_index:start_index + lenght_subarray]
-    if subarray[-1] >= subarray[-2]:
+    if subarray[-1] >= subarray[-(days_after+1)]:
         label = 1
     else:
-        label = 0
-    return subarray[:-1], label
+        label = -1
+    print('valor del arreglo',subarray[-(days_after+1)] ,'valor del quinto día', subarray[-1],'etiqueta', label)
+    return subarray[:-days_after], label
 
-def save_in_pickle(identifier, data_to_save, labels):
-    file_pickle = f'data_{identifier}.pkl'
+def save_in_pickle(identifier, subarrays, labels):
+    file_pickle = f'subarrays_{identifier}.pkl'
     labels_pickle = f'labels_{identifier}.pkl'
     with open(file_pickle, 'wb') as file:
-        pickle.dump(data_to_save, file)
+        pickle.dump(subarrays, file)
     with open(labels_pickle, 'wb') as file:
         pickle.dump(labels, file)
-    return f"Data saved in {file_pickle}"
+    return f"Data saved of the identifier {identifier}"
 
 def get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_continuo, number_of_examples):
     array_list = []  # list of the coefficient arrays obtained after running mp
     labels = []
     counter = 0
     for l in range(number_of_examples):
-        subarray, label = labeler(complete_series, 64)
+        subarray, label = labeler(complete_series, 64, 5)
         labels.append(label)
         subarray_continuo = np.interp(x_continuo, x_discreto, subarray)
         r, ap, subarray_coefficients = mp(dicc_y, dicc_x, subarray_continuo, x_continuo, 100)
@@ -108,7 +108,7 @@ def main(wavelet, resolution):
     ### LOAD DATA FROM MACHINE
     file = 'AAPL.csv'
     complete_series = np.genfromtxt(file, delimiter=',', usecols=5)[1:]
-    datos_adj = complete_series[:resolution]
+    # datos_adj = complete_series[:resolution]
 
     # ### LOAD DATA
     # data = read_ts_from_ibdb('AAPL', '1 day', None, '2023-08-31', last=1000)
@@ -122,15 +122,15 @@ def main(wavelet, resolution):
         x_continuo = np.concatenate((x_continuo, aux_x))
 
     # y_continuo = np.interp(x_continuo, x_discreto, data_adj_close)
-    datos_adj_continuo = np.interp(x_continuo, x_discreto, datos_adj)
+    # datos_adj_continuo = np.interp(x_continuo, x_discreto, datos_adj)  #data of machine
 
     ### SIGNAL PLOTS
     # plt.scatter(np.arange(64), datos_adj, label='discrete')
     # plt.legend()
     # plt.show()
-    plt.plot(x_continuo, datos_adj_continuo, label='Signal')
-    plt.legend()
-    plt.show()
+    # plt.plot(x_continuo, datos_adj_continuo, label='Signal')
+    # plt.legend()
+    # plt.show()
 
     ####################################################################################################
     identifier = sys.argv[1]
