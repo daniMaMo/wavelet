@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import random
 
 
-def interpolation( dicc_y, dicc_x, j, a, k):
+def interpolation(dicc_y, dicc_x_reduced, j, a, k):
     index_start = k * 1024
     support = np.linspace(k, (2 ** j) * 3 + k, num=((3072 * (2 ** j)) + 1))
-    atom_scala = np.interp(support, dicc_x[:, a] + k, dicc_y[:, a])
+    atom_scala = np.interp(support, dicc_x_reduced[:, j] + k, dicc_y[:, a])
 
     if k in range(64 - 3 * (2 ** j)):
         atom_complete = np.pad(atom_scala, (index_start, 64513 - index_start - len(atom_scala)), mode='constant')
@@ -17,7 +17,7 @@ def interpolation( dicc_y, dicc_x, j, a, k):
 
     return atom_complete
 
-def random_atoms(dicc_y, dicc_x, x_continuo):
+def random_atoms(dicc_y, dicc_x_reduced, x_continuo):
     """
     Generates a list of 5 random atoms based on the given dictionaries.
 
@@ -45,7 +45,7 @@ def random_atoms(dicc_y, dicc_x, x_continuo):
         k = random.choice(range(-3 * (2 ** j) + 1, 63))
         print(j, a, k)
 
-        atoms.append(interpolation(dicc_y, dicc_x, j, a, k))
+        atoms.append(interpolation(dicc_y, dicc_x_reduced, j, a, k))
 
         plt.plot(x_continuo, atoms[i], color='red', label=f'{i}')
         plt.legend()
@@ -72,7 +72,7 @@ def check(dicc_y, dicc_x, scale):
         for b in range(64 * j, 64 * (j + 1)):
             aux = np.linspace(0, (2 ** j) * 3, num=((3072 * (2 ** j)) + 1))
             atom_scala_a = np.interp(aux, dicc_x[:, a], dicc_y[:, a])
-            atom_scala_b = np.interp(aux, dicc_x[:,b], dicc_y[:,b])
+            atom_scala_b = np.interp(aux, dicc_x[:, b], dicc_y[:, b])
             if a == b and (abs(np.dot(atom_scala_a, atom_scala_b)/1024)-1) < 0.2:
                 pass
                 # print('correct, unitary norm')
@@ -83,7 +83,7 @@ def check(dicc_y, dicc_x, scale):
                 print(np.dot(atom_scala_a, atom_scala_b)/1024, a, b)
     return
 
-def mp(dicc_y, dicc_x, y_signal, x_continuo, iteration):
+def mp(dicc_y, dicc_x_reduced, y_signal, x_continuo, iteration):
     """
     Finds the "best matching" projections of multidimensional data
     onto the span of an over-complete (i.e., redundant) dictionary D.
@@ -102,19 +102,18 @@ def mp(dicc_y, dicc_x, y_signal, x_continuo, iteration):
     assert iteration <= 25792  ## To j = 5, n=64
     r = y_signal
     approx = np.zeros(64513)
-    key = 0
     coefficients = np.zeros(25792)
-    numbers_k = np.array([65, 68, 74, 86, 110])   # numbers of translations given the scale j
-    index_star_k = np.array([2, 5, 11, 23, 47])   # The translation initial given the scale j
-    trans_coefficients = np.array([0, 4160, 8512, 13248, 18752])  # Number of positions that must be moved to properly place it in the array coefficients.
+
     for _ in range(iteration):
         p = {}
+        key = 0
         print(_)
+
         for a in range(320):
             j = a // 64
 
             for k in range(-3 * (2 ** j)+1, 63):
-                atom_comp = interpolation(dicc_y, dicc_x, j, a, k)
+                atom_comp = interpolation(dicc_y, dicc_x_reduced, j, a, k)
                 new_value = {'product': (atom_comp @ r) * (1 / 1024), 'list': [j, a, k]}
                 p[key] = new_value
                 key += 1
@@ -122,6 +121,8 @@ def mp(dicc_y, dicc_x, y_signal, x_continuo, iteration):
         index_c_max = max(p, key=lambda k: p[k]['product'])
         c = p[index_c_max]['product']
         # print('c', c)
+        # print('el valor maximo de las keys', max(p.keys()))
+        coefficients[index_c_max] = c
 
         ### Calculating the residue
         list_max = p[index_c_max]['list']  # list: j, a , k
@@ -130,10 +131,7 @@ def mp(dicc_y, dicc_x, y_signal, x_continuo, iteration):
         j_max = list_max[0]
         a = list_max[1]
 
-        a_max = interpolation(dicc_y, dicc_x, j_max, a, k_max)
-
-        ### Update of coefficients
-        coefficients[(a%64)*(numbers_k[j_max]) + k_max + index_star_k[j_max] + trans_coefficients[j_max]] = c
+        a_max = interpolation(dicc_y, dicc_x_reduced, j_max, a, k_max)
 
         ### Plot signal
         # plt.plot(x_continuo, r, label=f'signal{_}')

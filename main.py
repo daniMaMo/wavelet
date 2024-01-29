@@ -19,7 +19,8 @@ import concurrent.futures
 import multiprocessing
 
 def gen_dict(wavelet, resolution):
-    file_path = f'/home/daniela/PycharmProjects/tesis/{wavelet}'
+    # file_path = f'/home/daniela/PycharmProjects/tesis/{wavelet}'
+    file_path = f'{wavelet}'
     if os.path.exists(file_path):
         print(f'The file "{file_path}" exists in the system.')
         with open(file_path, 'rb') as file:
@@ -36,7 +37,8 @@ def gen_dict(wavelet, resolution):
             return numpy_dictionary
 
 def gen_dict_x(wavelet, resolution):
-    file_path = f'/home/daniela/PycharmProjects/tesis/x{wavelet}'
+    # file_path = f'/home/daniela/PycharmProjects/tesis/x{wavelet}'
+    file_path = f'x{wavelet}'
     if os.path.exists(file_path):
         print(f'The file "{file_path}" exists in the system.')
         with open(file_path, 'rb') as file:
@@ -86,7 +88,7 @@ def save_in_pickle(identifier, subarrays, labels):
         pickle.dump(labels, file)
     return f"Data saved of the identifier {identifier}"
 
-def get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_continuo, number_of_examples):
+def get_examples(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, number_of_examples):
     array_list = []  # list of the coefficient arrays obtained after running mp
     labels = []
     counter = 0
@@ -94,7 +96,7 @@ def get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_cont
         subarray, label = labeler(complete_series, 64, 5)
         labels.append(label)
         subarray_continuo = np.interp(x_continuo, x_discreto, subarray)
-        r, ap, subarray_coefficients = mp(dicc_y, dicc_x, subarray_continuo, x_continuo, 100)
+        r, ap, subarray_coefficients = mp(dicc_y, dicc_x_reduced, subarray_continuo, x_continuo, 100)
         counter += 1
         print(counter)
         array_list.append(subarray_coefficients)
@@ -104,6 +106,9 @@ def get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_cont
 def main(wavelet, resolution):
     dicc_y = gen_dict(wavelet, resolution)
     dicc_x = gen_dict_x(wavelet, resolution)
+    selected_columns = [0, 64, 128, 192, 256]
+    dicc_x_reduced = dicc_x[:, selected_columns]
+    del dicc_x
 
     ### LOAD DATA FROM MACHINE
     file = 'AAPL.csv'
@@ -116,10 +121,11 @@ def main(wavelet, resolution):
 
     ### Domain interpolation for the given delta
     x_discreto = np.arange(resolution)
-    x_continuo = dicc_x[:, 0]
+    x_continuo = dicc_x_reduced[:, 0]
     for k in range(1, 21):
-        aux_x = dicc_x[:, 0][1:] + 3*k
+        aux_x = dicc_x_reduced[:, 0][1:] + 3*k
         x_continuo = np.concatenate((x_continuo, aux_x))
+    del aux_x
 
     # y_continuo = np.interp(x_continuo, x_discreto, data_adj_close)
     # datos_adj_continuo = np.interp(x_continuo, x_discreto, datos_adj)  #data of machine
@@ -133,10 +139,11 @@ def main(wavelet, resolution):
     # plt.show()
 
     ####################################################################################################
+    ##### GET EXAMPLES ##################
     identifier = sys.argv[1]
-    get_examples(dicc_y, dicc_x, complete_series, identifier, x_discreto, x_continuo, 1)
+    get_examples(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, 1)
 
-    # ## SIGNAL PLOTS
+    # ####### SIGNAL PLOTS ################
     # plt.scatter(np.arange(64), data_adj_close, label='discrete')
     # plt.legend()
     # plt.show()
@@ -149,8 +156,8 @@ def main(wavelet, resolution):
     # plt.legend()
     # plt.show()
 
-    # ### EXPERIMENTO ATOMS ALETORIOS
-    # atoms, j_s, a_s = random_atoms(dicc_y, dicc_x, x_continuo)
+    # ########### EXPERIMENTO ATOMS ALETORIOS #########
+    # atoms, j_s, a_s = random_atoms(dicc_y, dicc_x_reduced, x_continuo)
     # ## INTERNAL PRODUCTS
     # for i in range(5):
     #     for k in range(5):
@@ -163,9 +170,9 @@ def main(wavelet, resolution):
     # signal = np.zeros(64513)
     # for i in range(5):
     #     signal += numeros_aleatorios[i]*atoms[i]
-
-    ### MATHING PURSUIT FOR THE RANDOM EXPERIMENT
-    # r, ap, coefficients = mp(dicc_y, dicc_x, signal, x_continuo, 10)
+    #
+    # ## MATHING PURSUIT FOR THE RANDOM EXPERIMENT
+    # r, ap, coefficients = mp(dicc_y, dicc_x_reduced, signal, x_continuo, 10)
     # print('indices diferentes de cero', np.nonzero(coefficients))
 
     ### Calculating and storing the array required for executing the SVD
