@@ -123,7 +123,7 @@ class Function:
         return Function(self.x, rango)
 
 
-def package(wavelet, n):
+def package(wavelet, n, level):
     """
     Computes the n-th package of the given wavelet.
     Args:
@@ -135,7 +135,7 @@ def package(wavelet, n):
 
     """
 
-    phi, psi, x = pywt.Wavelet(wavelet).wavefun(level=10)
+    phi, psi, x = pywt.Wavelet(wavelet).wavefun(level=level)
     h = np.sqrt(2) * np.array(pywt.Wavelet(wavelet).dec_lo)[::-1]
     g = np.sqrt(2) * np.array(pywt.Wavelet(wavelet).dec_hi)[::-1]
     l = len(h)
@@ -145,17 +145,17 @@ def package(wavelet, n):
     if n == 1:
         return Function(x, psi)
     if (n % 2) == 0 and (n != 0):
-        w = package(wavelet, n/2).transform(0).vcomp(h[0])
+        w = package(wavelet, n/2, level).transform(0).vcomp(h[0])
         for k in range(1, l):
-            w = w + package(wavelet, n/2).transform(k).vcomp(h[k])
+            w = w + package(wavelet, n/2, level).transform(k).vcomp(h[k])
         return w
     if (n % 2) == 1 and (n != 1):
-        w = package(wavelet, (n-1) / 2).transform(0).vcomp(g[0])
+        w = package(wavelet, (n-1) / 2, level).transform(0).vcomp(g[0])
         for k in range(1, l):
-            w = w + package(wavelet, (n-1)/2).transform(k).vcomp(g[k])
+            w = w + package(wavelet, (n-1)/2, level).transform(k).vcomp(g[k])
         return w
 
-def w_jnk(wavelet, j, n, k):
+def w_jnk(wavelet, j, n, k, level):
     """
     Computes the atoms of wavelet packets of the given wavelet.
 
@@ -168,7 +168,7 @@ def w_jnk(wavelet, j, n, k):
     Returns: the atoms w_jnk.
 
     """
-    file_path = f'/home/daniela/PycharmProjects/tesis/package{wavelet}'
+    file_path = f'/home/daniela/PycharmProjects/tesis/package{wavelet}{level}'
     if os.path.exists(file_path):
         # print(f'The file "{file_path}" exists in the system.')
         with open(file_path, 'rb') as file:
@@ -178,10 +178,10 @@ def w_jnk(wavelet, j, n, k):
             return fun.atom_transform(j, k).vcomp(2**(-j/2))
     # return package(wavelet, n).atom_transform(j, k).vcomp(2**(-j/2))
 
-def package_load(wavelet, resolution):
+def package_load(wavelet, resolution, level):
     columnas_y = []
     columnas_x = []
-    file_path = f'/home/daniela/PycharmProjects/tesis/package{wavelet}'
+    file_path = f'/home/daniela/PycharmProjects/tesis/package{wavelet}{level}'
     if os.path.exists(file_path):
         print(f'The file "{file_path}" exists in the system.')
         with open(file_path, 'rb') as file:
@@ -192,14 +192,17 @@ def package_load(wavelet, resolution):
     else:
         print(f'The file "{file_path}" does not exist in the system.')
         for n in range(resolution):
-            columna_y = package(wavelet, n).y
+            columna_y = package(wavelet, n, level).y
             columnas_y.append(columna_y)
             pack_y = np.column_stack(columnas_y)
-            columna_x = package(wavelet, n).x
+            columna_x = package(wavelet, n, level).x
             columnas_x.append(columna_x)
             pack_x = np.column_stack(columnas_x)
             pack = np.concatenate((pack_x, pack_y), axis=1)
             print(n)
-        with open(f'package{wavelet}', 'wb') as file:
+        with open(f'package{wavelet}{level}', 'wb') as file:
             pickle.dump(pack, file)
             return pack
+
+# package_load('db2', 64, 8)
+# package_load('db2', 64, 10)

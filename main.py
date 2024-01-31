@@ -18,9 +18,9 @@ import sys
 import concurrent.futures
 import multiprocessing
 
-def gen_dict(wavelet, resolution):
+def gen_dict(wavelet, resolution, level):
     # file_path = f'/home/daniela/PycharmProjects/tesis/{wavelet}'
-    file_path = f'{wavelet}'
+    file_path = f'{wavelet}{level}'
     if os.path.exists(file_path):
         print(f'The file "{file_path}" exists in the system.')
         with open(file_path, 'rb') as file:
@@ -31,14 +31,14 @@ def gen_dict(wavelet, resolution):
     else:
         print(f'The file "{file_path}" does not exist in the system.')
         # j = int(np.log2(resolution))
-        numpy_dictionary = dictionary.const_dict_continue(wavelet, resolution)    # It's a numpy array
-        with open(wavelet, 'wb') as file:
+        numpy_dictionary = dictionary.const_dict_continue(wavelet, resolution, level)    # It's a numpy array
+        with open(file_path, 'wb') as file:
             pickle.dump(numpy_dictionary, file)
             return numpy_dictionary
 
-def gen_dict_x(wavelet, resolution):
+def gen_dict_x(wavelet, resolution, level):
     # file_path = f'/home/daniela/PycharmProjects/tesis/x{wavelet}'
-    file_path = f'x{wavelet}'
+    file_path = f'x{wavelet}{level}'
     if os.path.exists(file_path):
         print(f'The file "{file_path}" exists in the system.')
         with open(file_path, 'rb') as file:
@@ -49,8 +49,8 @@ def gen_dict_x(wavelet, resolution):
     else:
         print(f'The file "{file_path}" does not exist in the system.')
         # j = int(np.log2(resolution))
-        numpy_dictionary = dictionary.const_dict_continue_x(wavelet, resolution)    # It's a numpy array
-        with open(f'x{wavelet}', 'wb') as file:
+        numpy_dictionary = dictionary.const_dict_continue_x(wavelet, resolution, level)    # It's a numpy array
+        with open(f'x{wavelet}{level}', 'wb') as file:
             pickle.dump(numpy_dictionary, file)
             return numpy_dictionary
 
@@ -103,12 +103,31 @@ def get_examples(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto
     save_in_pickle(identifier, array_list, labels)
     return print(f"Finished of running the examples with the identifier {identifier}")
 
-def main(wavelet, resolution):
-    dicc_y = gen_dict(wavelet, resolution)
-    dicc_x = gen_dict_x(wavelet, resolution)
+def get_examples_generalized(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, number_of_examples):
+    array_list = []  # list of the coefficient arrays obtained after running mp
+    labels = []
+    counter = 0
+    for l in range(number_of_examples):
+        subarray, label = labeler(complete_series, 64, 5)
+        labels.append(label)
+        subarray_continuo = np.interp(x_continuo, x_discreto, subarray)
+        r, ap, subarray_coefficients = mp_generalized(dicc_y, dicc_x_reduced, subarray_continuo, x_continuo, 100)
+        counter += 1
+        print(counter)
+        array_list.append(subarray_coefficients)
+    save_in_pickle(identifier, array_list, labels)
+    return print(f"Finished of running the examples with the identifier {identifier}")
+
+def main(wavelet, resolution, level):
+    dicc_y = gen_dict(wavelet, resolution, level)
+    dicc_x = gen_dict_x(wavelet, resolution, level)
+
     selected_columns = [0, 64, 128, 192, 256]
     dicc_x_reduced = dicc_x[:, selected_columns]
     del dicc_x
+
+    delta = int((dicc_x_reduced.shape[0] - 1) / 3)
+    total_points = int((63 * delta) + 1)
 
     ### LOAD DATA FROM MACHINE
     file = 'AAPL.csv'
@@ -127,6 +146,7 @@ def main(wavelet, resolution):
         x_continuo = np.concatenate((x_continuo, aux_x))
     del aux_x
 
+    #####EXMAPLES SIGNALS TO THE MP#######
     # y_continuo = np.interp(x_continuo, x_discreto, data_adj_close)
     # datos_adj_continuo = np.interp(x_continuo, x_discreto, datos_adj)  #data of machine
 
@@ -139,9 +159,9 @@ def main(wavelet, resolution):
     # plt.show()
 
     ####################################################################################################
-    ##### GET EXAMPLES ##################
-    identifier = sys.argv[1]
-    get_examples(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, 1)
+    # ##### GET EXAMPLES ##################
+    # identifier = sys.argv[1]
+    # get_examples(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, 1)
 
     # ####### SIGNAL PLOTS ################
     # plt.scatter(np.arange(64), data_adj_close, label='discrete')
@@ -174,6 +194,29 @@ def main(wavelet, resolution):
     # ## MATHING PURSUIT FOR THE RANDOM EXPERIMENT
     # r, ap, coefficients = mp(dicc_y, dicc_x_reduced, signal, x_continuo, 10)
     # print('indices diferentes de cero', np.nonzero(coefficients))
+
+    # ########### EXPERIMENTO ATOMS ALETORIOS GENERALIZADO #########
+    # atoms, j_s, a_s = random_atoms_generalized(dicc_y, dicc_x_reduced, x_continuo)
+    # ## INTERNAL PRODUCTS
+    # for i in range(5):
+    #     for k in range(5):
+    #         print('p_interno', np.dot(atoms[i], atoms[k])/delta, 'atomo1', j_s[i], a_s[i],
+    #               'atomo2',j_s[k], a_s[k])
+    # rango = range(1, 101)
+    # numeros_aleatorios = random.sample(rango, 5)
+    # numeros_aleatorios.sort(reverse=True)
+    # print('números_aleatorios', numeros_aleatorios)
+    # signal = np.zeros(total_points)
+    # for i in range(5):
+    #     signal += numeros_aleatorios[i]*atoms[i]
+    #
+    # ## MATHING PURSUIT FOR THE RANDOM EXPERIMENT GENERALIZED #####
+    # r, ap, coefficients = mp_generalized(dicc_y, dicc_x_reduced, signal, x_continuo, 10)
+    # print('indices diferentes de cero', np.nonzero(coefficients))
+
+    # ##### GET EXAMPLES GENERALIZED##################
+    identifier = sys.argv[1]
+    get_examples_generalized(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, 1)
 
     ### Calculating and storing the array required for executing the SVD
     # array_list = []   # list of the coefficient arrays obtained after running mp
@@ -239,7 +282,7 @@ def main(wavelet, resolution):
 
 
 if __name__ == '__main__':
-    main('db2',64)
+    main('db2',64, 8)
 
     # data = read_ts_from_ibdb('AAPL', '1 day', None, '2023-08-31', last=1000)
     # data_adj_close = data[0]['adj_close'][:64].to_numpy()
