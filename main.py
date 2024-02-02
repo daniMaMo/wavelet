@@ -18,6 +18,7 @@ import sys
 import concurrent.futures
 import multiprocessing
 
+
 def gen_dict(wavelet, resolution, level):
     # file_path = f'/home/daniela/PycharmProjects/tesis/{wavelet}'
     file_path = f'{wavelet}{level}'
@@ -25,7 +26,7 @@ def gen_dict(wavelet, resolution, level):
         print(f'The file "{file_path}" exists in the system.')
         with open(file_path, 'rb') as file:
             dict_ = pickle.load(file)
-            #dict_ = file.read()
+            # dict_ = file.read()
             return dict_
 
     else:
@@ -36,6 +37,7 @@ def gen_dict(wavelet, resolution, level):
             pickle.dump(numpy_dictionary, file)
             return numpy_dictionary
 
+
 def gen_dict_x(wavelet, resolution, level):
     # file_path = f'/home/daniela/PycharmProjects/tesis/x{wavelet}'
     file_path = f'x{wavelet}{level}'
@@ -43,7 +45,7 @@ def gen_dict_x(wavelet, resolution, level):
         print(f'The file "{file_path}" exists in the system.')
         with open(file_path, 'rb') as file:
             dict_ = pickle.load(file)
-            #dict_ = file.read()
+            # dict_ = file.read()
             return dict_
 
     else:
@@ -54,6 +56,7 @@ def gen_dict_x(wavelet, resolution, level):
             pickle.dump(numpy_dictionary, file)
             return numpy_dictionary
 
+
 def labeler(complete_series, resolution, days_after):
     """
     Returns a subarray from complete_series of length resolution along with a label.
@@ -61,6 +64,7 @@ def labeler(complete_series, resolution, days_after):
     Args:
         complete_series: The large array from which the subarray is selected.
         resolution: The length of the subarray to be selected.
+        days_after: Missing Daniela.
 
     Returns:
          subarray: subarray of complete_series with length resolution.
@@ -76,8 +80,9 @@ def labeler(complete_series, resolution, days_after):
         label = 1
     else:
         label = -1
-    print('valor del arreglo',subarray[-(days_after+1)] ,'valor del quinto día', subarray[-1],'etiqueta', label)
+    print('valor del arreglo', subarray[-(days_after+1)], 'valor del quinto día', subarray[-1], 'etiqueta', label)
     return subarray[:-days_after], label
+
 
 def save_in_pickle(identifier, subarrays, labels):
     file_pickle = f'subarrays_{identifier}.pkl'
@@ -88,11 +93,12 @@ def save_in_pickle(identifier, subarrays, labels):
         pickle.dump(labels, file)
     return f"Data saved of the identifier {identifier}"
 
+
 def get_examples(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, number_of_examples):
     array_list = []  # list of the coefficient arrays obtained after running mp
     labels = []
     counter = 0
-    for l in range(number_of_examples):
+    for _ in range(number_of_examples):
         subarray, label = labeler(complete_series, 64, 5)
         labels.append(label)
         subarray_continuo = np.interp(x_continuo, x_discreto, subarray)
@@ -103,11 +109,13 @@ def get_examples(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto
     save_in_pickle(identifier, array_list, labels)
     return print(f"Finished of running the examples with the identifier {identifier}")
 
-def get_examples_generalized(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, number_of_examples):
+
+def get_examples_generalized(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo,
+                             number_of_examples):
     array_list = []  # list of the coefficient arrays obtained after running mp
     labels = []
     counter = 0
-    for l in range(number_of_examples):
+    for _ in range(number_of_examples):
         subarray, label = labeler(complete_series, 64, 5)
         labels.append(label)
         subarray_continuo = np.interp(x_continuo, x_discreto, subarray)
@@ -117,6 +125,7 @@ def get_examples_generalized(dicc_y, dicc_x_reduced, complete_series, identifier
         array_list.append(subarray_coefficients)
     save_in_pickle(identifier, array_list, labels)
     return print(f"Finished of running the examples with the identifier {identifier}")
+
 
 def main(wavelet, resolution, level):
     dicc_y = gen_dict(wavelet, resolution, level)
@@ -282,7 +291,7 @@ def main(wavelet, resolution, level):
 
 
 if __name__ == '__main__':
-    main('db2',64, 8)
+    main('db2', 64, 8)
 
     # data = read_ts_from_ibdb('AAPL', '1 day', None, '2023-08-31', last=1000)
     # data_adj_close = data[0]['adj_close'][:64].to_numpy()

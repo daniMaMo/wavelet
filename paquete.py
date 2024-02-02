@@ -155,6 +155,7 @@ def package(wavelet, n, level):
             w = w + package(wavelet, (n-1)/2, level).transform(k).vcomp(g[k])
         return w
 
+
 def w_jnk(wavelet, j, n, k, level):
     """
     Computes the atoms of wavelet packets of the given wavelet.
@@ -164,11 +165,12 @@ def w_jnk(wavelet, j, n, k, level):
         j: scale parameter.
         n: frequency parameter.
         k: position parameter.
+        level: Level of the wavelet.
 
     Returns: the atoms w_jnk.
 
     """
-    file_path = f'/home/daniela/PycharmProjects/tesis/package{wavelet}{level}'
+    file_path = f'package{wavelet}{level}'
     if os.path.exists(file_path):
         # print(f'The file "{file_path}" exists in the system.')
         with open(file_path, 'rb') as file:
