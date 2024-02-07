@@ -206,5 +206,3 @@ def package_load(wavelet, resolution, level):
             pickle.dump(pack, file)
             return pack
 
-# package_load('db2', 64, 8)
-# package_load('db2', 64, 10)
