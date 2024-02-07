@@ -3,7 +3,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-def const_dict(wavelet,j, n_row):
+def const_dict(wavelet,j, n_row, level):
     """
     Calculates the dictionary matrix, which contains in each column
     the coefficients of the wavelet dictionary atoms.
@@ -21,12 +21,12 @@ def const_dict(wavelet,j, n_row):
     matriz = np.zeros((n_row, m))
     for k in range(n_row):
         for n in range(2**j -1):
-            arreglox = w_jnk(wavelet, j, n, k).x
+            arreglox = w_jnk(wavelet, j, n, k, level).x
             # norm = np.trapz((w_jnk(wavelet, j, n, k).y)*(w_jnk(wavelet, j, n, k).y), w_jnk(wavelet, j, n, k).x)
             # print('norm', norm)
             numeros_enteros = arreglox[arreglox.astype(int) == arreglox]
             indices_no_cero = np.nonzero(numeros_enteros)
-            y = w_jnk(wavelet, j, n, k).y
+            y = w_jnk(wavelet, j, n, k, level).y
             atomcolumn = np.zeros(len(y))
             atomcolumn[indices_no_cero] = y[indices_no_cero]
             atomcolumn = atomcolumn[: n_row]
@@ -38,18 +38,19 @@ def const_dict(wavelet,j, n_row):
         # break
     return matriz
 
-def const_dict_continue(wavelet, n_row):
+def const_dict_continue(wavelet, n_row, level):
     j = 5
     # m = ((2 ** j) - 1) * (n_row)
     columnas = []
     # matriz = np.array([])
     for j in range(j):
         for n in range(64):
-            columna = w_jnk(wavelet, j, n, 0).y
+            columna = w_jnk(wavelet, j, n, 0, level).y
             columnas.append(columna)
             matriz = np.column_stack(columnas)
             print('j', j, 'n', n, 'k', 0)
-            norm = np.trapz((w_jnk(wavelet, j, n, 0).y)*(w_jnk(wavelet, j, n, 0).y), w_jnk(wavelet, j, n, 0).x)
+            norm = np.trapz((w_jnk(wavelet, j, n, 0, level).y)*(w_jnk(wavelet, j, n, 0, level).y),
+                            w_jnk(wavelet, j, n, 0, level).x)
             print('norm', norm)
             # print(len(w_jnk(wavelet, j, n, k).y))
             # print(matriz.shape)
@@ -61,15 +62,18 @@ def const_dict_continue(wavelet, n_row):
         # break
     return matriz
 
-def const_dict_continue_x(wavelet, n_row):
+def const_dict_continue_x(wavelet, n_row, level):
     j = 5
     # m = ((2 ** j) - 1) * (n_row)
     columnas = []
     # matriz = np.array([])
     for j in range(j):
         for n in range(64):
-            columna = w_jnk(wavelet, j, n, 0).x
+            columna = w_jnk(wavelet, j, n, 0, level).x
             columnas.append(columna)
             matriz = np.column_stack(columnas)
             print('j', j, 'n', n, 'k', 0)
     return matriz
+
+# const_dict_continue('db2', 64, 8)
+# const_dict_continue_x('db2', 64, 8)
