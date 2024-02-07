@@ -298,4 +298,3 @@ if __name__ == '__main__':
     # print(data_adj_close)
     # print(type(data_adj_close))
     # print(len(data_adj_close))
-
