@@ -17,6 +17,7 @@ import random
 import sys
 import concurrent.futures
 import multiprocessing
+from indicators import *
 
 
 def gen_dict(wavelet, resolution, level):
@@ -224,8 +225,120 @@ def main(wavelet, resolution, level):
     # print('indices diferentes de cero', np.nonzero(coefficients))
 
     # ##### GET EXAMPLES GENERALIZED##################
-    identifier = sys.argv[1]
-    get_examples_generalized(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, 1)
+    # identifier = sys.argv[1]
+    # get_examples_generalized(dicc_y, dicc_x_reduced, complete_series, identifier, x_discreto, x_continuo, 1)
+
+    #### EXPAMPLES LIST LIST
+    list_of_examples = []
+    list_of_labels = []
+    for i in range(13):
+        example_pickle = f'subarrays_{i}.pkl'
+        label_pickle = f'labels_{i}.pkl'
+        with open(example_pickle, 'rb') as file:
+            example = pickle.load(file)
+            list_of_examples.append(example)
+        with open(label_pickle, 'rb') as file:
+            label = pickle.load(file)
+            list_of_labels.append(label)
+    list_of_examples_planar = sum(list_of_examples, [])
+    list_of_labels_planar = [value for sublist in list_of_labels for value in sublist]
+
+    list_of_examples_planar = list_of_examples_planar[:500]
+    labels = list_of_labels_planar[:500]
+
+    ### MATRIX FOR SVD
+    examples_matrix = np.array(list_of_examples_planar)
+    print(examples_matrix.shape)
+
+    #### SVD
+    reduced_matrix = redSVD(examples_matrix, 300)
+    print(reduced_matrix.shape)
+
+    ### THE FEATURE SET ###
+    # for each discrete example array
+    discrete_example_array = np.arange(64)  ### this I must load
+    feature_1 = moving_average(discrete_example_array, 64, 5)
+    feature_2 = moving_average(discrete_example_array, 64, 10)
+    feature_3 = moving_average(discrete_example_array, 64, 25)
+    feature_4 = moving_average(discrete_example_array, 64, 40)
+    feature_5 = exponential_moving_average(discrete_example_array, 64, 5)
+    feature_6 = exponential_moving_average(discrete_example_array, 64, 10)
+    feature_7 = exponential_moving_average(discrete_example_array, 64, 25)
+    feature_8 = exponential_moving_average(discrete_example_array, 64, 40)
+    feature_9 = macd(discrete_example_array, 64)
+    ## feature_10 = obv(discrete_example_array, volumes_array,64 ,64)
+    feature_11 = rsi(discrete_example_array, 64, 4)
+    feature_12 = rsi(discrete_example_array,64, 9)
+    feature_13 = rsi(discrete_example_array, 64, 14)
+    feature_14 = (discrete_example_array[-1] - discrete_example_array[-2])/ discrete_example_array[-2]
+    feature_15 = (discrete_example_array[-1] - moving_average(discrete_example_array, 64, 5)) / moving_average(
+        discrete_example_array, 64, 5)
+    feature_16 = (discrete_example_array[-1] - moving_average(discrete_example_array, 64, 10)) / moving_average(
+        discrete_example_array, 64, 10)
+    feature_17 = (discrete_example_array[-1] - moving_average(discrete_example_array, 64, 15)) / moving_average(
+        discrete_example_array, 64, 15)
+    feature_18 = (discrete_example_array[-1] - moving_average(discrete_example_array, 64, 20)) / moving_average(
+        discrete_example_array, 64, 20)
+    feature_19 = (discrete_example_array[-1] - moving_average(discrete_example_array, 64, 25)) / moving_average(
+        discrete_example_array, 64, 25)
+    feature_20 = (discrete_example_array[-1] - moving_average(discrete_example_array, 64, 30)) / moving_average(
+        discrete_example_array, 64, 30)
+    feature_21 = (discrete_example_array[-1] - moving_average(discrete_example_array, 64, 35)) / moving_average(
+        discrete_example_array, 64, 35)
+    feature_22 = (discrete_example_array[-1] - moving_average(discrete_example_array, 64, 40)) / moving_average(
+        discrete_example_array, 64, 40)
+
+    upper_band_10, lower_band_10 = bollinger_bands(discrete_example_array, 64, 10, 2)
+    if lower_band_10 <= discrete_example_array[-1] <= upper_band_10:
+        feature_23 = 0
+    elif discrete_example_array[-1] > upper_band_10:
+        feature_23 = discrete_example_array[-1] - upper_band_10
+    elif discrete_example_array[-1] < lower_band_10:
+        feature_23 = discrete_example_array[-1] - lower_band_10
+
+    upper_band_20, lower_band_20 = bollinger_bands(discrete_example_array, 64, 20, 2)
+    if lower_band_20 <= discrete_example_array[-1] <= upper_band_20:
+        feature_24 = 0
+    elif discrete_example_array[-1] > upper_band_20:
+        feature_24 = discrete_example_array[-1] - upper_band_20
+    elif discrete_example_array[-1] < lower_band_20:
+        feature_24 = discrete_example_array[-1] - lower_band_20
+
+    upper_band_30, lower_band_30 = bollinger_bands(discrete_example_array, 64, 30, 2)
+    if lower_band_30 <= discrete_example_array[-1] <= upper_band_30:
+        feature_25 = 0
+    elif discrete_example_array[-1] > upper_band_30:
+        feature_25 = discrete_example_array[-1] - upper_band_30
+    elif discrete_example_array[-1] < lower_band_30:
+        feature_25 = discrete_example_array[-1] - lower_band_30
+
+    feature_26 = (rsi(discrete_example_array, 64, 5) - 50) / 50
+    feature_27 = (rsi(discrete_example_array, 64, 10) - 50) / 50
+    feature_28 = (rsi(discrete_example_array, 64, 15) - 50) / 50
+    feature_29 = (rsi(discrete_example_array, 64, 20) - 50) / 50
+
+    porcent_k_5, porcent_d_5 = os(discrete_example_array,64, 3, 5)
+    porcent_k_10, porcent_d_10 = os(discrete_example_array, 64, 3, 10)
+    porcent_k_15, porcent_d_15 = os(discrete_example_array, 64, 3, 15)
+    porcent_k_20, porcent_d_20 = os(discrete_example_array, 64, 3, 20)
+    feature_30 = (porcent_k_5 - 50) / 50
+    feature_31 = (porcent_k_10 - 50) / 50
+    feature_32 = (porcent_k_15 - 50) / 50
+    feature_33 = (porcent_k_20 - 50) / 50
+    feature_34 = ((porcent_k_5 - porcent_d_5) - 50) / 50
+    feature_35 = ((porcent_k_10 - porcent_d_10) - 50) / 50
+    feature_36 = ((porcent_k_15 - porcent_d_15) - 50) / 50
+    feature_37 = ((porcent_k_20 - porcent_d_20) - 50) / 50
+
+    feature_38 = discrete_example_array[-2]
+    feature_39 = discrete_example_array[-3]
+    feature_40 = discrete_example_array[-4]
+    feature_41 = discrete_example_array[-5]
+    feature_42 = discrete_example_array[-6]
+
+    feature_set = []
+    for i in range(1, 43):
+        feature_set.append(f'feature_{i}')
 
     ### Calculating and storing the array required for executing the SVD
     # array_list = []   # list of the coefficient arrays obtained after running mp
