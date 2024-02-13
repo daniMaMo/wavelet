@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.decomposition import TruncatedSVD
-
+from sklearn.preprocessing import StandardScaler
 
 def cenandstand(array):
     """
@@ -30,7 +30,7 @@ def cenandstand(array):
 
 def redSVD(array, dim):
     """
-    WARNING: Data must be centered and standardized.
+    WARNING: The data will be centered and standardized.
 
     Reduces dimension of the given array (data).
 
@@ -41,14 +41,14 @@ def redSVD(array, dim):
     Returns:
         The new array of shape: (same row number of "array", "dim" )
 
-    Examples:
-        redSVD(np.array([[1, 2, 3],[4, 5, 6], [7, 8, 9]]), 2)
-        [[1, 2], [4, 5], [7, 8]]
     """
 
     assert dim <= array.shape[1]
 
-    tsvd = TruncatedSVD(n_components=dim)    # Create the instance TruncatedSVD
-    array_aprox = tsvd.fit_transform(array)  # It's only U @ Sigma
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(array)
 
-    return np.dot(array_aprox, tsvd.components_[:, :dim])
+    tsvd = TruncatedSVD(n_components=dim)    # Create the instance TruncatedSVD
+    X_reduced  = tsvd.fit_transform(X_scaled)  # It's U @ Sigma
+    # np.dot(array_aprox, tsvd.components_[:, :dim]) initial matrix
+    return X_reduced
